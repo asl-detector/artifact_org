@@ -1,0 +1,21 @@
+version: 0.1
+
+# Resource usage estimates for ASL Dataset infrastructure
+resource_usage:
+  # ECR
+  aws_ecr_repository.model_repository:
+    storage_gb: 10 # Estimated storage for model artifacts
+
+  # S3 Buckets
+  aws_s3_bucket.model_serving_bucket:
+    standard:
+      storage_gb: 10
+      monthly_tier_1_requests: 1000  # GET, LIST, etc.
+      monthly_tier_2_requests: 500   # PUT, COPY, POST, etc.
+
+    # standard_infrequent_access:
+    #   storage_gb: 5
+    #   monthly_tier_1_requests: 1000  # GET, LIST, etc.
+    #   monthly_tier_2_requests: 500   # PUT, COPY, POST, etc.
+
+  
