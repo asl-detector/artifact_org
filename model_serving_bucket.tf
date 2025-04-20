@@ -14,7 +14,10 @@ resource "aws_s3_bucket_policy" "model_serving_bucket_policy" {
       {
         Effect = "Allow"
         Principal = {
-          AWS = "arn:aws:iam::<LAMBDA_ACCOUNT_ID>:root"  # Replace with actual account ID
+          AWS = [
+            "arn:aws:iam::${local.account_ids.staging}:root",
+            "arn:aws:iam::${local.account_ids.production}:root"
+          ]
         }
         Action = [
           "s3:GetObject",
@@ -48,7 +51,10 @@ resource "aws_iam_role" "model_serving_lambda_role" {
       Effect    = "Allow"
       Principal = { 
         Service = "lambda.amazonaws.com" 
-        AWS = "arn:aws:iam::<LAMBDA_ACCOUNT_ID>:root"  
+        AWS = [
+          "arn:aws:iam::${local.account_ids.staging}:root",
+          "arn:aws:iam::${local.account_ids.production}:root"
+        ]
       }
     }]
   })
@@ -65,7 +71,6 @@ resource "aws_iam_role_policy" "lambda_s3_model_serving_policy" {
         Effect = "Allow"
         Action = [
           "s3:GetObject",
-        #   "s3:PutObject" # Include if uploads are needed
         ]
         Resource = [
           "${aws_s3_bucket.model_serving_bucket.arn}",
