@@ -47,10 +47,10 @@ resource "aws_iam_role" "model_serving_lambda_role" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Action    = "sts:AssumeRole"
-      Effect    = "Allow"
-      Principal = { 
-        Service = "lambda.amazonaws.com" 
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
         AWS = [
           "arn:aws:iam::${local.account_ids.staging}:root",
           "arn:aws:iam::${local.account_ids.production}:root"
@@ -86,6 +86,41 @@ resource "aws_iam_role_policy" "lambda_s3_model_serving_policy" {
   })
 }
 
+resource "aws_iam_role" "operations_upload_role" {
+  name = "operations-upload-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        AWS = "arn:aws:iam::${data.terraform_remote_state.org_structure.outputs.account_ids.operations}:root"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "operations_upload_policy" {
+  name = "operations-upload-policy"
+  role = aws_iam_role.operations_upload_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "s3:PutObject",
+        "s3:ListBucket"
+      ]
+      Resource = [
+        aws_s3_bucket.model_serving_bucket.arn,
+        "${aws_s3_bucket.model_serving_bucket.arn}/*"
+      ]
+    }]
+  })
+}
+
 output "model_serving_bucket_name" {
   value = aws_s3_bucket.model_serving_bucket.id
 }
@@ -93,3 +128,9 @@ output "model_serving_bucket_name" {
 output "model_serving_lambda_role_arn" {
   value = aws_iam_role.model_serving_lambda_role.arn
 }
+
+output "operations_upload_role_arn" {
+  value       = aws_iam_role.operations_upload_role.arn
+  description = "ARN of the role that operations account can assume to upload models"
+}
+
